@@ -1,6 +1,9 @@
 %% data
 clear
-clc 
+clc
+rng(1)
+PutNoise = true;
+sigma = 0;
 
 addpath ../../../../../Simulator/yet-another-robotics-toolbox/code/
 addpath ../../../../../Simulator/yet-another-robotics-toolbox/code/spatial_chain/
@@ -11,31 +14,44 @@ a = a(2:end); % avoid invalid structure when a==0
 s = (0:0.01:L)'; % point where length is s
 
 
-poi = [1 30 60 90 126];
+poi = [ 30 60 90 126];
 number_of_point = length(poi);
 number_of_curve = length(a);
-
+color = [1, 0, 0;
+    0, 1, 0;
+    0, 0, 1;
+    1, 1, 0;
+    0, 1, 1];
 
 data = zeros(number_of_curve,3*number_of_point);
-figure(1)
+fig = set_fig(figure(1),'pos',[0.6,0.4,0.3,0.5],...
+            'view_info',[0,90],'axis_info',1*[-0.1,+1.2,0.1,+0.7,-1,+1],'AXIS_EQUAL',1,'GRID_ON',1,...
+            'REMOVE_MENUBAR',1,'USE_DRAGZOOM',1,'SET_CAMLIGHT',1,'SET_MATERIAL','METAL',...
+            'SET_AXISLABEL',1,'afs',18,'interpreter','latex','NO_MARGIN',0);
+
 for scale = (1:number_of_curve)
     for p=(1:length(poi))
         point_idx = poi(p);
-        x_p = fresnelc(sqrt(2/pi)*a(scale).*s(point_idx))./a(scale);
-        y_p = fresnels(sqrt(2/pi)*a(scale).*s(point_idx))./a(scale);
-        z_p = 0;
-        
+        if PutNoise
+            x_p = fresnelc(sqrt(2/pi)*a(scale).*s(point_idx))./a(scale) + normrnd(0,sigma);
+            y_p = fresnels(sqrt(2/pi)*a(scale).*s(point_idx))./a(scale) + normrnd(0,sigma);
+            z_p = 0;
+        else
+            x_p = fresnelc(sqrt(2/pi)*a(scale).*s(point_idx))./a(scale);
+            y_p = fresnels(sqrt(2/pi)*a(scale).*s(point_idx))./a(scale);
+            z_p = 0;
+        end
         data(scale,3*p-2:3*p) = [x_p,y_p,z_p];
-        plot(x_p,y_p,'marker','o')
+        plot(x_p,y_p,'marker','o','MarkerFaceColor',color(p,:),'MarkerEdgeColor', color(p,:))
         hold on
     end
 end
 hold off
 data = [a',data];
-% dlmwrite('5points_euler_spiral.txt',data,' ') %uncomment to save data
+dlmwrite('Sigma_0_Euler.txt',data,' ') %uncomment to save data
 %% plotting for integrity test
-addpath ../../../../Simulator/yet-another-robotics-toolbox/code/
-addpath ../../../../Simulator/yet-another-robotics-toolbox/code/spatial_chain/
+addpath ../../../../../Simulator/yet-another-robotics-toolbox/code/
+addpath ../../../../../Simulator/yet-another-robotics-toolbox/code/spatial_chain/
 
 ccc
 
@@ -66,8 +82,8 @@ hold off
 
 
 %% time dependent euler spiral
-addpath ../../../../Simulator/yet-another-robotics-toolbox/code/
-addpath ../../../../Simulator/yet-another-robotics-toolbox/code/spatial_chain/
+addpath ../../../../../Simulator/yet-another-robotics-toolbox/code/
+addpath ../../../../../Simulator/yet-another-robotics-toolbox/code/spatial_chain/
 
 ccc
 L = 1.0*sqrt(pi/2); % initial length
@@ -125,7 +141,7 @@ while 1
         j = j+1;
 %         pause(1e-1);
     else
-        pause(1e-6);
+%         pause(1e-6);
     end
     
     % Animate
